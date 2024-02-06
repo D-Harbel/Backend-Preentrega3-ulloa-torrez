@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport')
-const UserReadDTO = require('../dto/userDTO');
+const UserReadGithubDTO = require('../dto/userGithubDTO');
 
 module.exports = function (io) {
     router.get('/github', passport.authenticate('github', {}), (req, res) => { })
@@ -25,7 +25,7 @@ module.exports = function (io) {
                 const usuario = req.session.usuario;
                 console.log(usuario)
     
-                const userDTO = new UserReadDTO(usuario);
+                const userDTO = new UserReadGithubDTO(usuario);
     
                 return res.status(200).json({
                     user: userDTO

@@ -30,7 +30,6 @@ const initPassportGithub = () => {
     
                         let nuevoCarrito = await Cart.create({ usuario: usuario._id, products: [] });
     
-                        // Actualiza el usuario para agregar el ID del carrito
                         usuario.cart = nuevoCarrito._id;
                         await usuario.save();
                     }

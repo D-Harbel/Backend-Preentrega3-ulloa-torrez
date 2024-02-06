@@ -1,5 +1,7 @@
 const CartService = require('../repository/cart.service');
 const { Cart } = require('../dao/index');
+const ProductService = require('../repository/product.service');
+const Ticket = require('../dao/models/ticketModel');
 
 class CartController {
     async createCart(req, res) {
@@ -137,6 +139,9 @@ class CartController {
             res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
+
+
+    
 }
 
 module.exports = new CartController();

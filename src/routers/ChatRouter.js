@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { isUser } = require('../middleware/authorization');
 
 module.exports = function (io, MessageDao) {
-    router.get('/', async (req, res) => {
+    router.get('/', isUser, async (req, res) => {
         try {
             const messages = await MessageDao.getMessages();
             res.render('chat', { messages });

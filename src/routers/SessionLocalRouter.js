@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport')
-const UserReadDTO = require('../dto/userDTO');
+const UserReadLocalDTO = require('../dto/userLocalDTO');
 
 
 module.exports = function (io) {
@@ -43,7 +43,7 @@ module.exports = function (io) {
                 const usuario = req.session.usuario;
                 console.log(usuario)
     
-                const userDTO = new UserReadDTO(usuario);
+                const userDTO = new UserReadLocalDTO(usuario);
     
                 return res.status(200).json({
                     user: userDTO
