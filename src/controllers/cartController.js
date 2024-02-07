@@ -1,7 +1,5 @@
 const CartService = require('../repository/cart.service');
 const { Cart } = require('../dao/index');
-const ProductService = require('../repository/product.service');
-const Ticket = require('../dao/models/ticketModel');
 
 class CartController {
     async createCart(req, res) {
@@ -43,7 +41,7 @@ class CartController {
             await CartService.addProductToCart(cid, productId, quantity);
 
             const updatedCart = await CartService.getCartById(cid);
-            io.emit('updateCart', updatedCart);
+            req.io.emit('updateCart', updatedCart);
 
             res.status(201).json({ message: 'Producto agregado al carrito' });
         } catch (error) {
@@ -139,9 +137,6 @@ class CartController {
             res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
-
-
-    
 }
 
 module.exports = new CartController();
