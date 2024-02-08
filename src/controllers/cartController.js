@@ -1,6 +1,7 @@
 const CartService = require('../repository/cart.service');
 const productService = require('../repository/product.service')
-const ticketService = require('../repository/ticket.service')
+const ticketLogic = require('../utils/utils')
+
 
 
 
@@ -143,58 +144,53 @@ class CartController {
         }
     }
 
-    async purchaseCart(cartId, sessionUsuario) {
+    async purchaseCart(req, res) {
+        const cid = req.params.cid;
         try {
-            const cart = await Cart.findById(cartId);
+            const cart = await Cart.findById(cid).populate('products.product');
+            if (!cart) {
+                return res.status(404).json({ error: 'Carrito no encontrado' });
+            }
+    
+            const user = req.session.usuario;
+            const purchaserEmail = user ? user.email : 'Unknown';
+            let totalAmount = 0;
             const failedProducts = [];
-            const successfulProducts = [];
     
-            // Generar el ticket independientemente de si hay productos que fallan o no
-            const user = sessionUsuario;
-            const purchaserEmail = user ? user.email : 'Unknown'; // Usar un correo desconocido si no hay usuario
-            let totalAmount = 0; // Inicializar el monto total
-    
-            // Recorrer los productos del carrito
             for (const productItem of cart.products) {
-                const productId = productItem.product;
+                const productId = productItem.product._id;
                 const quantity = productItem.quantity;
     
                 const product = await productService.getProductById(productId);
                 if (!product || product.stock < quantity) {
                     failedProducts.push(productId);
                 } else {
-                    // Calcular el subtotal del producto y sumarlo al monto total
                     totalAmount += product.price * quantity;
-    
-                    // Actualizar el stock del producto y guardar los cambios
                     product.stock -= quantity;
                     await product.save();
-    
-                    // Agregar el producto a la lista de productos exitosos
-                    successfulProducts.push(productItem);
                 }
             }
     
-            // Generar el ticket con el monto total calculado solo si hay productos exitosos
-            if (successfulProducts.length > 0) {
-                const ticket = await ticketService.generateTicket(purchaserEmail, totalAmount);
-            }
+            const ticket = await ticketLogic.generateTicket(purchaserEmail, totalAmount);
     
-            // Actualizar el carrito del usuario si existe
-            if (user && user.cartID) {
-                const userCart = await Cart.findOne({ userId: user._id });
-                if (userCart) {
-                    // Filtrar los productos que no se pudieron comprar
-                    const remainingProducts = cart.products.filter(productItem => failedProducts.includes(productItem.product));
-                    userCart.products = remainingProducts;
-                    await userCart.save();
+            try {
+                cart.products = failedProducts;
+                await cart.save();
+    
+                console.log('Ticket generado:', ticket);
+    
+                if (failedProducts.length === 0) {
+                    res.status(200).json({ message: 'Compra completada con éxito. Ticket generado.', ticket });
+                } else {
+                    res.status(200).json({ message: 'Compra completada con productos no disponibles', failedProducts, ticket });
                 }
+            } catch (error) {
+                console.error('Error al guardar el carrito actualizado:', error);
+                res.status(500).json({ error: 'Error interno del servidor' });
             }
-    
-            return failedProducts;
         } catch (error) {
-            console.error('Error al procesar la compra:', error);
-            throw error;
+            console.error('Error al finalizar la compra:', error);
+            res.status(500).json({ error: 'Error interno del servidor' });
         }
     }
 }
