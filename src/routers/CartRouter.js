@@ -13,7 +13,7 @@ module.exports = function (io) {
     router.put('/:cid', cartController.updateCart);
     router.put('/:cid/products/:pid', cartController.updateProductInCart);
     router.delete('/:cid', cartController.deleteAllProductsInCart);
-    router.post('/:cid/purchase', isUser, cartController.purchaseCart);
+    router.post('/:cid/purchase',  cartController.purchaseCart);
 
 
     return router;

@@ -1,6 +1,6 @@
 const CartService = require('../repository/cart.service');
 const productService = require('../repository/product.service')
-const ticketLogic = require('../utils/utils')
+const ticketLogic = require('../dao/ticketDao')
 
 
 
@@ -163,7 +163,7 @@ class CartController {
     
                 const product = await productService.getProductById(productId);
                 if (!product || product.stock < quantity) {
-                    failedProducts.push(productId);
+                    failedProducts.push(productItem);
                 } else {
                     totalAmount += product.price * quantity;
                     product.stock -= quantity;
