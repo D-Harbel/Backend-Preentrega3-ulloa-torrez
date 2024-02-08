@@ -117,6 +117,17 @@ app.get('/views/products', async (req, res) => {
     }
 });
 
+app.get('/purchase', (req, res) => {
+    // Verifica si el usuario está autenticado y si tiene un carrito asociado
+    if (req.session.usuario && req.session.usuario.cartID) {
+        const cartId = req.session.usuario.cartID;
+        res.render('purchase', { cartId });
+    } else {
+        // Manejar el caso donde el usuario no está autenticado o no tiene un carrito asociado
+        res.status(403).send('Usuario no autenticado o sin carrito asociado');
+    }
+});
+
 io.on('connection', async (socket) => {
     console.log('Cliente conectado');
 

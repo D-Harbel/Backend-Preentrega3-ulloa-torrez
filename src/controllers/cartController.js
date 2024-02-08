@@ -1,4 +1,9 @@
 const CartService = require('../repository/cart.service');
+const productService = require('../repository/product.service')
+const ticketService = require('../repository/ticket.service')
+
+
+
 const { Cart } = require('../dao/index');
 
 class CartController {
@@ -135,6 +140,61 @@ class CartController {
         } catch (error) {
             console.error('Error al eliminar todos los productos del carrito:', error);
             res.status(500).json({ error: 'Error interno del servidor' });
+        }
+    }
+
+    async purchaseCart(cartId, sessionUsuario) {
+        try {
+            const cart = await Cart.findById(cartId);
+            const failedProducts = [];
+            const successfulProducts = [];
+    
+            // Generar el ticket independientemente de si hay productos que fallan o no
+            const user = sessionUsuario;
+            const purchaserEmail = user ? user.email : 'Unknown'; // Usar un correo desconocido si no hay usuario
+            let totalAmount = 0; // Inicializar el monto total
+    
+            // Recorrer los productos del carrito
+            for (const productItem of cart.products) {
+                const productId = productItem.product;
+                const quantity = productItem.quantity;
+    
+                const product = await productService.getProductById(productId);
+                if (!product || product.stock < quantity) {
+                    failedProducts.push(productId);
+                } else {
+                    // Calcular el subtotal del producto y sumarlo al monto total
+                    totalAmount += product.price * quantity;
+    
+                    // Actualizar el stock del producto y guardar los cambios
+                    product.stock -= quantity;
+                    await product.save();
+    
+                    // Agregar el producto a la lista de productos exitosos
+                    successfulProducts.push(productItem);
+                }
+            }
+    
+            // Generar el ticket con el monto total calculado solo si hay productos exitosos
+            if (successfulProducts.length > 0) {
+                const ticket = await ticketService.generateTicket(purchaserEmail, totalAmount);
+            }
+    
+            // Actualizar el carrito del usuario si existe
+            if (user && user.cartID) {
+                const userCart = await Cart.findOne({ userId: user._id });
+                if (userCart) {
+                    // Filtrar los productos que no se pudieron comprar
+                    const remainingProducts = cart.products.filter(productItem => failedProducts.includes(productItem.product));
+                    userCart.products = remainingProducts;
+                    await userCart.save();
+                }
+            }
+    
+            return failedProducts;
+        } catch (error) {
+            console.error('Error al procesar la compra:', error);
+            throw error;
         }
     }
 }
