@@ -182,7 +182,7 @@ class CartController {
                 if (failedProducts.length === 0) {
                     res.status(200).json({ message: 'Compra completada con éxito. Ticket generado.', ticket });
                 } else {
-                    res.status(200).json({ message: 'Compra completada con productos no disponibles', failedProducts, ticket });
+                    res.status(200).json({ message: 'Compra completada con productos no disponibles', failedProducts: failedProducts.map(item => item.product._id), ticket });
                 }
             } catch (error) {
                 console.error('Error al guardar el carrito actualizado:', error);
