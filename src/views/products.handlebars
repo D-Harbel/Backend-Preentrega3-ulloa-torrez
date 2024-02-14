@@ -51,7 +51,6 @@
     }
 
     function addToCart(productId, productName) {
-        console.log(socket);
 
         if (typeof socket !== 'undefined' && socket.connected) {
             socket.emit('addToCart', { productId, productName, userRole });
