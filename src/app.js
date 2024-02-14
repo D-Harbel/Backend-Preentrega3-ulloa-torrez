@@ -117,14 +117,21 @@ app.get('/views/products', async (req, res) => {
     }
 });
 
-app.get('/purchase', (req, res) => {
-    // Verifica si el usuario está autenticado y si tiene un carrito asociado
-    if (req.session.usuario && req.session.usuario.cartID) {
+app.get('/purchase', async (req, res) => {
+    if (!req.session.usuario) {
+        return res.redirect('/login');
+    }
+
+    try {
         const cartId = req.session.usuario.cartID;
-        res.render('purchase', { cartId });
-    } else {
-        // Manejar el caso donde el usuario no está autenticado o no tiene un carrito asociado
-        res.status(403).send('Usuario no autenticado o sin carrito asociado');
+
+        const cart = await CartService.getCartById(cartId);
+
+
+        res.status(200).render('purchase', { cart, cartId });
+    } catch (error) {
+        console.error('Error al obtener el carrito:', error);
+        res.status(500).send('Error interno del servidor');
     }
 });
 
